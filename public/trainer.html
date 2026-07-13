@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Portal - Trainer</title>
+    <link rel="stylesheet" href="css/index.css">
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                FitLife Trainer
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-item active" data-tab="dashboard">
+                    <span>👥 Members</span>
+                </div>
+                <div class="nav-item" data-tab="workouts">
+                    <span>💪 Assign Workout</span>
+                </div>
+                <div class="nav-item" data-tab="classes">
+                    <span>🧘‍♂️ My Classes</span>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div>Welcome, <span id="trainerName" style="font-weight: 600;">Trainer</span></div>
+                <div class="header-actions">
+                    <button class="btn btn-outline" id="logoutBtn">Logout</button>
+                </div>
+            </header>
+
+            <div class="page-content">
+
+                <!-- Dashboard (Members) -->
+                <div id="tab-dashboard" class="tab-content active">
+                    <h2 style="margin-bottom: 24px;">All Gym Members</h2>
+                    <div class="card">
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="trainerMembersBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workouts -->
+                <div id="tab-workouts" class="tab-content">
+                    <h2 style="margin-bottom: 24px;">Assign Workout Plan</h2>
+                    <div class="card" style="max-width: 600px;">
+                        <form id="assignWorkoutForm">
+                            <div class="form-group">
+                                <label class="form-label">Select Member</label>
+                                <select name="member_id" id="workoutMemberSelect" class="form-control" required>
+                                    <option value="">-- Loading Members --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Workout Title</label>
+                                <input type="text" name="title" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Workout Details / Exercises</label>
+                                <textarea name="details" class="form-control" rows="6" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Assign Workout</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Classes -->
+                <div id="tab-classes" class="tab-content">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h2>My Classes</h2>
+                        <button class="btn btn-primary" onclick="openModal('createClassModal')">+ Schedule Class</button>
+                    </div>
+                    <div class="card">
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Class Name</th>
+                                        <th>Time</th>
+                                        <th>Capacity</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="trainerClassesBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Create Class Modal -->
+    <div id="createClassModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Schedule New Class</h3>
+                <button class="modal-close" onclick="closeModal('createClassModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createClassForm">
+                    <div class="form-group">
+                        <label class="form-label">Class Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Schedule Time</label>
+                        <input type="text" placeholder="e.g., Mon 18:00" name="schedule_time" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Capacity</label>
+                        <input type="number" name="capacity" class="form-control" value="15" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Schedule Class</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

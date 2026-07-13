@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitLife Gym - Login</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@700;900&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/index.css">
+</head>
+<body class="login-body">
+    <!-- Animated Background Elements -->
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+    
+    <div class="container-fluid min-vh-100 d-flex flex-column flex-lg-row p-0">
+        <!-- Left Side: Branding / 3D Graphics -->
+        <div class="col-lg-6 d-flex flex-column justify-content-center align-items-center text-white branding-section p-5 position-relative overflow-hidden">
+            <div class="branding-content text-center" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+                <h1 class="display-3 fw-bold outfit-font mb-4 text-uppercase title-glow">Forged In Sweat</h1>
+                <p class="lead mb-5 opacity-75">Push your limits. Transform your body. Join the elite.</p>
+                <div class="features-grid text-start">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-box me-3">🔥</div>
+                        <span>Premium Equipment</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-box me-3">💪</div>
+                        <span>Expert Trainers</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box me-3">🏆</div>
+                        <span>Results Driven</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Overlay gradient -->
+            <div class="branding-overlay"></div>
+        </div>
+
+        <!-- Right Side: Login Form -->
+        <div class="col-lg-6 d-flex align-items-center justify-content-center p-4 p-md-5 bg-darker">
+            <div class="login-glass-card w-100" style="max-width: 450px;" data-tilt data-tilt-max="10" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.1">
+                <div class="text-center mb-4">
+                    <h2 class="outfit-font fw-bold text-white mb-2">Welcome Back</h2>
+                    <p class="text-muted">Enter your credentials to access the portal</p>
+                </div>
+                
+                <div id="loginAlert" class="alert alert-danger" style="display: none;"></div>
+                
+                <form id="loginForm">
+                    <div class="mb-4 form-floating glass-input-group">
+                        <input type="text" id="username" name="username" class="form-control glass-input" placeholder="Username" required>
+                        <label for="username" class="text-muted">Username</label>
+                    </div>
+                    
+                    <div class="mb-4 form-floating glass-input-group">
+                        <input type="password" id="password" name="password" class="form-control glass-input" placeholder="Password" required>
+                        <label for="password" class="text-muted">Password</label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold text-uppercase login-btn mt-2">
+                        <span>Ignite Session</span>
+                    </button>
+                </form>
+                
+                <div class="mt-4 pt-3 border-top border-secondary text-center">
+                    <p class="small text-muted mb-0">Test Accounts:</p>
+                    <div class="d-flex justify-content-center gap-2 mt-2 flex-wrap">
+                        <span class="badge bg-secondary opacity-75">admin/admin123</span>
+                        <span class="badge bg-secondary opacity-75">trainer/trainer123</span>
+                        <span class="badge bg-secondary opacity-75">member/member123</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vanilla Tilt for 3D Cards -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

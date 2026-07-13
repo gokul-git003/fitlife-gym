@@ -1,0 +1,146 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  role      String   @default("member") // "admin", "trainer", "member"
+  name      String?
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberProfile  MemberProfile?
+  trainerProfile TrainerProfile?
+}
+
+model MemberProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  joinDate  DateTime @default(now())
+  
+  memberships Membership[]
+  attendance  Attendance[]
+  payments    Payment[]
+  workouts    Workout[]
+}
+
+model TrainerProfile {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id])
+  specialty  String?
+  
+  classes    Class[]
+  workouts   Workout[]
+  attendance Attendance[]
+}
+
+model MembershipPlan {
+  id          String       @id @default(uuid())
+  name        String
+  price       Float
+  duration    Int          // in days
+  
+  memberships Membership[]
+}
+
+model Membership {
+  id         String         @id @default(uuid())
+  memberId   String
+  member     MemberProfile  @relation(fields: [memberId], references: [id])
+  planId     String
+  plan       MembershipPlan @relation(fields: [planId], references: [id])
+  startDate  DateTime       @default(now())
+  endDate    DateTime
+  status     String         @default("active") // "active", "expired"
+}
+
+model Class {
+  id          String         @id @default(uuid())
+  name        String
+  trainerId   String
+  trainer     TrainerProfile @relation(fields: [trainerId], references: [id])
+  startTime   DateTime
+  capacity    Int
+  
+  bookings    Booking[]
+}
+
+model Booking {
+  id        String   @id @default(uuid())
+  classId   String
+  class     Class    @relation(fields: [classId], references: [id])
+  memberId  String
+  // Relation to MemberProfile can be added
+  status    String   @default("booked") // "booked", "cancelled"
+}
+
+model Attendance {
+  id           String          @id @default(uuid())
+  memberId     String?
+  member       MemberProfile?  @relation(fields: [memberId], references: [id])
+  trainerId    String?
+  trainer      TrainerProfile? @relation(fields: [trainerId], references: [id])
+  checkInTime  DateTime        @default(now())
+  checkOutTime DateTime?
+  status       String          @default("checked_in") // "checked_in", "checked_out"
+}
+
+model Payment {
+  id        String         @id @default(uuid())
+  memberId  String
+  member    MemberProfile  @relation(fields: [memberId], references: [id])
+  amount    Float
+  date      DateTime       @default(now())
+  status    String         @default("completed") // "pending", "completed"
+}
+
+model Workout {
+  id        String         @id @default(uuid())
+  title     String
+  details   String
+  memberId  String
+  member    MemberProfile  @relation(fields: [memberId], references: [id])
+  trainerId String
+  trainer   TrainerProfile @relation(fields: [trainerId], references: [id])
+  date      DateTime       @default(now())
+  exercises WorkoutExercise[]
+}
+
+model WorkoutExercise {
+  id        String   @id @default(uuid())
+  workoutId String
+  workout   Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  name      String
+  sets      Int
+  reps      Int
+  completed Int      @default(0) // 0 or 1
+}
+
+model GymSettings {
+  id                  String   @id @default(uuid())
+  gymName             String   @default("FitLife Gym")
+  businessHoursStart  String   @default("06:00")
+  businessHoursEnd    String   @default("22:00")
+  allowMemberSignups  Boolean  @default(true)
+  requireEmailVerify  Boolean  @default(false)
+  updatedAt           DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String   // e.g. "USER_LOGIN", "DELETE_MEMBER"
+  userId    String?  // The user who performed the action
+  userRole  String?  // The role of the user (admin, trainer, etc.)
+  details   String   // JSON string or text details
+  createdAt DateTime @default(now())
+}
