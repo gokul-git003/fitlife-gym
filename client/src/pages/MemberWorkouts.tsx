@@ -27,7 +27,7 @@ export default function MemberWorkouts() {
     fetchWorkouts();
   }, []);
 
-  const handleCompleteExercise = async (workoutId: string, exerciseId: string) => {
+  const handleCompleteExercise = async (exerciseId: string) => {
     try {
       await fetch('/api/workouts/exercise/complete', {
         method: 'POST',
@@ -106,7 +106,7 @@ export default function MemberWorkouts() {
                         </div>
                         {!ex.completed && (
                           <button 
-                            onClick={() => handleCompleteExercise(w.id, ex.id)}
+                            onClick={() => handleCompleteExercise(ex.id)}
                             className="px-4 py-2 border border-primary text-primary hover:bg-primary hover:text-white rounded-lg text-sm font-bold transition-all flex items-center gap-2"
                           >
                             <Check className="w-4 h-4" /> Complete

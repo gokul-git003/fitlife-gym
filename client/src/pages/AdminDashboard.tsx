@@ -4,7 +4,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell 
 } from 'recharts';
-import { Users, Activity, DollarSign, TrendingUp, UserPlus, Zap } from 'lucide-react';
+import { Users, Activity, DollarSign, TrendingUp } from 'lucide-react';
 import Layout from '../components/Layout';
 
 const COLORS = ['#3b82f6', '#8b5cf6', '#ef4444', '#10b981'];
@@ -126,7 +126,7 @@ export default function AdminDashboard() {
                   paddingAngle={5}
                   dataKey="bookings"
                 >
-                  {advancedStats.classPopularity.map((entry: any, index: number) => (
+                  {advancedStats.classPopularity.map((_: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>

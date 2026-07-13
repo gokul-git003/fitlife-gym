@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Lock, Activity, ShieldCheck, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { User, Lock, ShieldCheck, ChevronRight, CheckCircle2 } from 'lucide-react';
 
 export default function ForgotPassword() {
   const [formData, setFormData] = useState({ username: '', newPassword: '' });
