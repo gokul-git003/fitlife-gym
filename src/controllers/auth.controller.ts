@@ -12,7 +12,8 @@ const generateToken = (id: string, role: string) => {
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { username, password, name, role } = req.body;
+    let { username, password, name, role } = req.body;
+    username = username.toLowerCase();
 
     const userExists = await prisma.user.findUnique({ where: { username } });
     if (userExists) {
@@ -63,7 +64,8 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { username, password } = req.body;
+    let { username, password } = req.body;
+    username = username.toLowerCase();
 
     const user = await prisma.user.findUnique({
       where: { username },
