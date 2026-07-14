@@ -53,10 +53,11 @@ import bcrypt from 'bcrypt';
 
 const seedAdmin = async () => {
   try {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('admin123', salt);
+
     const adminExists = await prisma.user.findUnique({ where: { username: 'admin' } });
     if (!adminExists) {
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash('admin123', salt);
       await prisma.user.create({
         data: {
           username: 'admin',
@@ -65,7 +66,13 @@ const seedAdmin = async () => {
           role: 'admin',
         },
       });
-      console.log('Seeded default admin account (admin/admin123)');
+      console.log('Seeded default admin account');
+    } else {
+      // Force reset the password to admin123 so the user can always log in
+      await prisma.user.update({
+        where: { username: 'admin' },
+        data: { password: hashedPassword, role: 'admin' }
+      });
     }
   } catch (error) {
     console.error('Failed to seed admin:', error);
