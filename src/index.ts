@@ -57,18 +57,22 @@ const seedAdmin = async () => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('admin123', salt);
 
-    // Database Migration Logic: Upload localhost dev.db to Railway volume
-    const sourceDb = path.join(__dirname, '../dev.db');
+    // Database Migration Logic: Upload localhost database using Base64 to prevent corruption
+    const sourceDb = path.join(__dirname, '../db.base64');
     const destDb = path.join(__dirname, '../data/dev.db');
-    const marker = path.join(__dirname, '../data/migrated.marker');
+    const marker = path.join(__dirname, '../data/migrated_base64.marker');
     
     // Only migrate if we are on Railway (DATABASE_URL exists) and haven't migrated yet
     if (process.env.DATABASE_URL && fs.existsSync(sourceDb) && !fs.existsSync(marker)) {
-      console.log('MIGRATION: Copying localhost database to live volume...');
+      console.log('MIGRATION: Decoding and copying localhost database to live volume...');
       if (!fs.existsSync(path.dirname(destDb))) fs.mkdirSync(path.dirname(destDb), { recursive: true });
-      fs.copyFileSync(sourceDb, destDb);
+      
+      const base64Data = fs.readFileSync(sourceDb, 'utf8');
+      const buffer = Buffer.from(base64Data, 'base64');
+      fs.writeFileSync(destDb, buffer);
+      
       fs.writeFileSync(marker, 'done');
-      console.log('MIGRATION: Successfully uploaded localhost database!');
+      console.log('MIGRATION: Successfully uploaded localhost database from Base64!');
     }
 
     const adminExists = await prisma.user.findUnique({ where: { username: 'admin' } });
