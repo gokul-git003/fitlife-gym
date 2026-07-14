@@ -27,10 +27,14 @@ const StatCard = ({ title, value, icon: Icon, trend, delay }: any) => (
       </div>
     </div>
     <div className="flex items-center gap-2 text-sm relative z-10">
-      <span className="flex items-center text-success bg-success/10 px-2 py-0.5 rounded-full font-medium">
-        <TrendingUp className="w-3 h-3 mr-1" /> {trend}
-      </span>
-      <span className="text-textMuted">vs last month</span>
+      {trend && (
+        <>
+          <span className="flex items-center text-success bg-success/10 px-2 py-0.5 rounded-full font-medium">
+            <TrendingUp className="w-3 h-3 mr-1" /> {trend}
+          </span>
+          <span className="text-textMuted">vs last month</span>
+        </>
+      )}
     </div>
   </motion.div>
 );
@@ -68,9 +72,9 @@ export default function AdminDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <StatCard title="Total Members" value={stats.totalMembers ?? 0} icon={Users} trend="+12%" delay={0.1} />
-        <StatCard title="Active Members" value={stats.activeMembers ?? 0} icon={Activity} trend="+5%" delay={0.2} />
-        <StatCard title="Monthly Revenue" value={`$${stats.totalRevenue ?? 0}`} icon={DollarSign} trend="+18%" delay={0.3} />
+        <StatCard title="Total Members" value={stats.totalMembers ?? 0} icon={Users} delay={0.1} />
+        <StatCard title="Active Members" value={stats.activeMembers ?? 0} icon={Activity} delay={0.2} />
+        <StatCard title="Monthly Revenue" value={`$${stats.totalRevenue ?? 0}`} icon={DollarSign} delay={0.3} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
