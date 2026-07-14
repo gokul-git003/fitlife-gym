@@ -74,6 +74,12 @@ export const login = async (req: Request, res: Response) => {
     });
 
     if (user && (await bcrypt.compare(password, user.password))) {
+      // Auto-upgrade if username is admin but role is member (due to old bug)
+      if (user.username.toLowerCase() === 'admin' && user.role !== 'admin') {
+        await prisma.user.update({ where: { id: user.id }, data: { role: 'admin' } });
+        user.role = 'admin';
+      }
+
       let profileId = null;
       if (user.role === 'member' && user.memberProfile) profileId = user.memberProfile.id;
       if (user.role === 'trainer' && user.trainerProfile) profileId = user.trainerProfile.id;

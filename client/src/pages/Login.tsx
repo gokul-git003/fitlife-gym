@@ -156,18 +156,12 @@ export default function Login() {
               </form>
 
               <div className="mt-8 pt-6 border-t border-border/50 text-center">
-                <p className="text-sm text-textMuted mb-4">
+                <p className="text-sm text-textMuted">
                   New to FitLife?{' '}
                   <button type="button" onClick={() => navigate('/signup')} className="text-primary hover:text-white font-bold transition-colors">
                     Create an Account
                   </button>
                 </p>
-                <p className="text-xs text-textMuted mb-3 uppercase tracking-wider font-semibold">Test Credentials</p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs text-textMuted">admin/admin123</span>
-                  <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs text-textMuted">trainer/trainer123</span>
-                  <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs text-textMuted">member/member123</span>
-                </div>
               </div>
             </div>
           </div>
