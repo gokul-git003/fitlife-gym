@@ -4,9 +4,9 @@
   "description": "Gym Portal",
   "main": "server.js",
   "scripts": {
-    "start": "node dist/index.js",
+    "start": "npx prisma generate && npx prisma db push && node dist/index.js",
     "dev": "tsx watch src/index.ts",
-    "build": "cd client && npm install && npm run build && cd .. && npx tsc"
+    "build": "cd client && npm install && npm run build && cd .. && npx prisma generate && npx tsc"
   },
   "dependencies": {
     "@prisma/client": "^5.15.0",
