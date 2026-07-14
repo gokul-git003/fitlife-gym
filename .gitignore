@@ -1,7 +1,7 @@
 node_modules
 .env
 dist
-dev.db
+# dev.db temporarily allowed for migration
 dev.db-journal
 client/node_modules
 client/dist

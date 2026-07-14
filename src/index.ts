@@ -11,6 +11,7 @@ import attendanceRoutes from './routes/attendance.routes';
 import reportRoutes from './routes/report.routes';
 import userRoutes from './routes/user.routes';
 import dotenv from 'dotenv';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -55,6 +56,20 @@ const seedAdmin = async () => {
   try {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('admin123', salt);
+
+    // Database Migration Logic: Upload localhost dev.db to Railway volume
+    const sourceDb = path.join(__dirname, '../dev.db');
+    const destDb = path.join(__dirname, '../data/dev.db');
+    const marker = path.join(__dirname, '../data/migrated.marker');
+    
+    // Only migrate if we are on Railway (DATABASE_URL exists) and haven't migrated yet
+    if (process.env.DATABASE_URL && fs.existsSync(sourceDb) && !fs.existsSync(marker)) {
+      console.log('MIGRATION: Copying localhost database to live volume...');
+      if (!fs.existsSync(path.dirname(destDb))) fs.mkdirSync(path.dirname(destDb), { recursive: true });
+      fs.copyFileSync(sourceDb, destDb);
+      fs.writeFileSync(marker, 'done');
+      console.log('MIGRATION: Successfully uploaded localhost database!');
+    }
 
     const adminExists = await prisma.user.findUnique({ where: { username: 'admin' } });
     if (!adminExists) {
