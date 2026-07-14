@@ -3,24 +3,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CreditCard, CheckCircle2, Clock, X } from 'lucide-react';
 import Layout from '../components/Layout';
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 export default function MemberPayments() {
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPayModal, setShowPayModal] = useState(false);
-  const [showGatewayModal, setShowGatewayModal] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi'>('card');
-  const [paymentStep, setPaymentStep] = useState<'details' | 'otp' | 'upi_approval'>('details');
   const [isProcessing, setIsProcessing] = useState(false);
   const [msg, setMsg] = useState('');
+  const [utr, setUtr] = useState('');
+  const [modalStep, setModalStep] = useState<1 | 2>(1);
 
   const [payForm, setPayForm] = useState({
     amount: 49.99,
     description: 'Monthly Membership'
   });
-  
-  const [cardDetails, setCardDetails] = useState({ number: '', expiry: '', cvv: '' });
-  const [upiId, setUpiId] = useState('');
-  const [otp, setOtp] = useState('');
 
   const fetchPayments = () => {
     const userStr = localStorage.getItem('gymUser');
@@ -44,66 +45,47 @@ export default function MemberPayments() {
     fetchPayments();
   }, []);
 
-  const handleInitiatePayment = (e: React.FormEvent) => {
+  const handleInitiatePayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowPayModal(false);
-    setPaymentStep('details');
-    setShowGatewayModal(true);
-  };
-
-  const handleDetailsSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (paymentMethod === 'card') {
-      if (cardDetails.number.replace(/\s/g, '').length !== 16) {
-        setMsg('Card number must be exactly 16 digits');
-        setTimeout(() => setMsg(''), 3000);
-        return;
-      }
-      setPaymentStep('otp');
-    } else {
-      setPaymentStep('upi_approval');
-      // Simulate waiting for user to approve on their phone, then auto-process
-      setTimeout(() => {
-        processSecurePayment();
-      }, 5000);
+    const cleanUtr = utr.trim();
+    if (!cleanUtr || cleanUtr.length !== 12 || !/^\d+$/.test(cleanUtr)) {
+      setMsg('Please enter a valid 12-digit Transaction ID (UTR)');
+      return;
     }
-  };
-
-  const processSecurePayment = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
     const userStr = localStorage.getItem('gymUser');
     const user = userStr ? JSON.parse(userStr) : null;
-    if (!user || !user.profileId) return;
+    if (!user || !user.profileId) {
+      setMsg('User not found.');
+      return;
+    }
 
     setIsProcessing(true);
-
     try {
-      // Simulate secure processing delay
-      await new Promise(resolve => setTimeout(resolve, 2500));
-
       const res = await fetch('/api/member/payments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           member_id: user.profileId, 
           amount: Number(payForm.amount), 
-          description: payForm.description 
+          description: `${payForm.description} (UTR: ${utr})` 
         })
       });
-
+      
       if (res.ok) {
-        setMsg('Payment processed securely and successfully!');
-        setShowGatewayModal(false);
+        setMsg('Payment submitted successfully!');
+        setShowPayModal(false);
+        setUtr('');
         fetchPayments();
       } else {
-        setMsg('Failed to process payment');
+        const errorData = await res.json();
+        setMsg(errorData.error || 'Failed to submit payment');
       }
-      setTimeout(() => setMsg(''), 4000);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setMsg('Network Error.');
+      setMsg(err.message || 'Error submitting payment');
     } finally {
       setIsProcessing(false);
+      setTimeout(() => setMsg(''), 5000);
     }
   };
 
@@ -125,7 +107,10 @@ export default function MemberPayments() {
             </motion.div>
           )}
           <button 
-            onClick={() => setShowPayModal(true)}
+            onClick={() => {
+              setModalStep(1);
+              setShowPayModal(true);
+            }}
             className="px-6 py-2 bg-primary hover:bg-primaryHover text-white rounded-lg font-bold shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all flex items-center gap-2">
             <CreditCard className="w-5 h-5" /> Pay Now
           </button>
@@ -201,9 +186,9 @@ export default function MemberPayments() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-surface border border-border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
+              className="bg-surface border border-border rounded-2xl w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh]"
             >
-              <div className="p-6 border-b border-border flex justify-between items-center">
+              <div className="p-6 border-b border-border flex justify-between items-center shrink-0">
                 <h2 className="text-xl font-bold text-white font-display">Make a Payment</h2>
                 <button onClick={() => setShowPayModal(false)} className="text-textMuted hover:text-white transition">
                   <X className="w-6 h-6" />
@@ -211,167 +196,63 @@ export default function MemberPayments() {
               </div>
               <div className="p-6">
                 <form onSubmit={handleInitiatePayment} className="space-y-4">
-                  <div>
-                    <label className="block text-sm text-textMuted mb-2">Description</label>
-                    <input type="text" required value={payForm.description} onChange={e => setPayForm({...payForm, description: e.target.value})} className="w-full bg-background border border-border rounded-xl px-4 py-2 text-white focus:outline-none focus:border-primary transition" />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-textMuted mb-2">Amount ($)</label>
-                    <input type="number" step="0.01" required value={payForm.amount} onChange={e => setPayForm({...payForm, amount: Number(e.target.value)})} className="w-full bg-background border border-border rounded-xl px-4 py-2 text-white focus:outline-none focus:border-primary transition" />
-                  </div>
-                  
-                  <button 
-                    type="submit"
-                    className="w-full py-3 mt-4 bg-primary hover:bg-primaryHover text-white rounded-xl font-bold transition"
-                  >
-                    Proceed to Secure Payment
-                  </button>
-                </form>
-              </div>
-            </motion.div>
-          </div>
-        )}
-
-        {/* Custom Mock Secure Gateway Modal */}
-        {showGatewayModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/90 backdrop-blur-md">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-surface border border-border rounded-2xl w-full max-w-md overflow-hidden shadow-[0_0_40px_rgba(59,130,246,0.15)]"
-            >
-              <div className="p-6 border-b border-border flex justify-between items-center bg-background/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                    <CheckCircle2 className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-white leading-tight">Secure Checkout</h2>
-                    <p className="text-xs text-textMuted">Amount: ${payForm.amount.toFixed(2)}</p>
-                  </div>
-                </div>
-                <button onClick={() => {
-                  setShowGatewayModal(false);
-                  setPaymentStep('details');
-                }} className="text-textMuted hover:text-white transition">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              
-              <div className="p-6">
-                {msg && (
-                  <div className="mb-4 p-3 bg-warning/20 text-warning border border-warning/30 rounded-lg text-sm text-center font-bold">
-                    {msg}
-                  </div>
-                )}
-                
-                {paymentStep === 'details' && (
-                  <>
-                    <div className="flex gap-2 p-1 mb-6 bg-background rounded-xl">
+                  {modalStep === 1 ? (
+                    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
+                      <div>
+                        <label className="block text-sm text-textMuted mb-2">Description</label>
+                        <input type="text" required value={payForm.description} onChange={e => setPayForm({...payForm, description: e.target.value})} className="w-full bg-background border border-border rounded-xl px-4 py-2 text-white focus:outline-none focus:border-primary transition" />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-textMuted mb-2">Amount ($)</label>
+                        <input type="number" step="0.01" required value={payForm.amount} onChange={e => setPayForm({...payForm, amount: Number(e.target.value)})} className="w-full bg-background border border-border rounded-xl px-4 py-2 text-white focus:outline-none focus:border-primary transition" />
+                      </div>
                       <button 
                         type="button"
-                        onClick={() => setPaymentMethod('card')}
-                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition ${paymentMethod === 'card' ? 'bg-surface text-white shadow' : 'text-textMuted hover:text-white'}`}
+                        onClick={() => setModalStep(2)}
+                        className="w-full py-3 mt-4 bg-primary hover:bg-primaryHover text-white rounded-xl font-bold transition flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(59,130,246,0.3)]"
                       >
-                        Credit/Debit Card
+                        Next
                       </button>
-                      <button 
-                        type="button"
-                        onClick={() => setPaymentMethod('upi')}
-                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition ${paymentMethod === 'upi' ? 'bg-surface text-white shadow' : 'text-textMuted hover:text-white'}`}
-                      >
-                        UPI
-                      </button>
-                    </div>
-
-                    <form onSubmit={handleDetailsSubmit} className="space-y-4">
-                      {paymentMethod === 'card' ? (
-                        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-                          <div>
-                            <label className="block text-xs font-semibold text-textMuted uppercase tracking-wider mb-2">Card Number</label>
-                            <div className="relative">
-                              <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-textMuted" />
-                              <input type="text" placeholder="0000 0000 0000 0000" maxLength={16} required value={cardDetails.number} onChange={e => setCardDetails({...cardDetails, number: e.target.value.replace(/\D/g, '')})} className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-white focus:outline-none focus:border-primary transition" />
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-xs font-semibold text-textMuted uppercase tracking-wider mb-2">Expiry</label>
-                              <input type="text" placeholder="MM/YY" maxLength={5} required value={cardDetails.expiry} onChange={e => setCardDetails({...cardDetails, expiry: e.target.value})} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary transition" />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-semibold text-textMuted uppercase tracking-wider mb-2">CVV</label>
-                              <input type="password" placeholder="123" maxLength={4} required value={cardDetails.cvv} onChange={e => setCardDetails({...cardDetails, cvv: e.target.value})} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary transition" />
-                            </div>
-                          </div>
-                        </motion.div>
-                      ) : (
-                        <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-                          <div>
-                            <label className="block text-xs font-semibold text-textMuted uppercase tracking-wider mb-2">UPI ID</label>
-                            <input type="text" placeholder="username@upi" required value={upiId} onChange={e => setUpiId(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary transition" />
-                          </div>
-                          <div className="p-4 bg-primary/10 border border-primary/20 rounded-xl">
-                            <p className="text-sm text-primary text-center">A payment request will be sent to your UPI app for approval.</p>
-                          </div>
-                        </motion.div>
-                      )}
+                    </motion.div>
+                  ) : (
+                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
+                      <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl mb-4 shadow-inner">
+                        <div className="w-56 h-56 md:w-64 md:h-64 overflow-hidden rounded-lg relative flex items-center justify-center mb-3">
+                          <img src="/qr-code.png" alt="Scan to Pay" className="w-full h-full object-cover object-center" />
+                        </div>
+                        <p className="text-sm font-bold text-gray-800">Scan using any UPI App</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm text-textMuted mb-2">Transaction ID (UTR)</label>
+                        <input type="text" required pattern="\d{12}" maxLength={12} minLength={12} placeholder="Enter 12-digit UTR number" value={utr} onChange={e => setUtr(e.target.value.replace(/\D/g, ''))} className="w-full bg-background border border-border rounded-xl px-4 py-2 text-white focus:outline-none focus:border-primary transition" />
+                      </div>
                       
-                      <button 
-                        type="submit" 
-                        className="w-full py-3.5 mt-6 bg-primary hover:bg-primaryHover text-white rounded-xl font-bold transition flex justify-center items-center shadow-[0_0_20px_rgba(59,130,246,0.3)]"
-                      >
-                        Request Secure Payment
-                      </button>
-                    </form>
-                  </>
-                )}
-
-                {paymentStep === 'otp' && (
-                  <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="py-4 text-center">
-                    <h3 className="text-xl font-bold text-white mb-2">Verify Your Card</h3>
-                    <p className="text-sm text-textMuted mb-6">We've sent a 6-digit OTP to your registered mobile number ending in ****1234.</p>
-                    <form onSubmit={processSecurePayment} className="space-y-4">
-                      <input 
-                        type="text" 
-                        placeholder="Enter OTP (e.g. 123456)" 
-                        maxLength={6} 
-                        required 
-                        value={otp} 
-                        onChange={e => setOtp(e.target.value.replace(/\D/g, ''))} 
-                        className="w-full text-center tracking-widest text-xl bg-background border border-border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition" 
-                      />
-                      <button 
-                        type="submit" 
-                        disabled={isProcessing || otp.length < 4}
-                        className="w-full py-3.5 bg-primary hover:bg-primaryHover text-white rounded-xl font-bold transition flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(59,130,246,0.3)]"
-                      >
-                        {isProcessing ? (
-                          <>
-                            <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                            Verifying...
-                          </>
-                        ) : (
-                          'Confirm & Pay'
-                        )}
-                      </button>
-                    </form>
-                  </motion.div>
-                )}
-
-                {paymentStep === 'upi_approval' && (
-                  <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="py-8 text-center flex flex-col items-center">
-                    <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-6 relative">
-                       <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                       <CheckCircle2 className="w-8 h-8 text-primary" />
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-2">Awaiting UPI Approval</h3>
-                    <p className="text-sm text-textMuted max-w-[250px]">
-                      Open your UPI app for <b>{upiId}</b> and approve the payment request of <b>${payForm.amount.toFixed(2)}</b>.
-                    </p>
-                  </motion.div>
-                )}
+                      <div className="flex gap-3 mt-4">
+                        <button 
+                          type="button"
+                          onClick={() => setModalStep(1)}
+                          className="w-1/3 py-3 bg-surface hover:bg-background text-white border border-border rounded-xl font-bold transition"
+                        >
+                          Back
+                        </button>
+                        <button 
+                          type="submit"
+                          disabled={isProcessing || utr.trim().length !== 12}
+                          className="w-2/3 py-3 bg-primary hover:bg-primaryHover text-white rounded-xl font-bold transition disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+                        >
+                          {isProcessing ? (
+                            <>
+                              <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                              Submitting...
+                            </>
+                          ) : (
+                            'Submit Payment'
+                          )}
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </form>
               </div>
             </motion.div>
           </div>
