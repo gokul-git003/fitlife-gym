@@ -23,6 +23,8 @@ export const getAvailableClasses = async (req: Request, res: Response) => {
   }
 };
 
+import { logAudit } from '../utils/audit';
+
 export const bookClass = async (req: Request, res: Response) => {
   const { classId, memberId } = req.body;
   if (!classId || !memberId) {
@@ -49,8 +51,15 @@ export const bookClass = async (req: Request, res: Response) => {
         classId,
         memberId,
         status
+      },
+      include: {
+        member: { include: { user: true } }
       }
     });
+
+    if (booking.member?.user) {
+      await logAudit('CLASS_BOOKED', booking.member.user.id, 'member', `Member ${booking.member.user.name || booking.member.user.username} booked class ${targetClass.name}`);
+    }
 
     res.json(booking);
   } catch (error) {
@@ -61,10 +70,19 @@ export const bookClass = async (req: Request, res: Response) => {
 export const cancelBooking = async (req: Request, res: Response) => {
   const { bookingId } = req.body;
   try {
-    await prisma.booking.update({
+    const booking = await prisma.booking.update({
       where: { id: bookingId },
-      data: { status: 'cancelled' }
+      data: { status: 'cancelled' },
+      include: {
+        member: { include: { user: true } },
+        class: true
+      }
     });
+    
+    if (booking.member?.user) {
+      await logAudit('CLASS_CANCELLED', booking.member.user.id, 'member', `Member ${booking.member.user.name || booking.member.user.username} cancelled class ${booking.class.name}`);
+    }
+    
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Failed to cancel booking' });

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
+import { logAudit } from '../utils/audit';
 
 export const getClasses = async (req: Request, res: Response) => {
   try {
@@ -82,8 +83,17 @@ export const assignWorkout = async (req: Request, res: Response) => {
         details,
         memberId,
         trainerId
+      },
+      include: {
+        trainer: { include: { user: true } },
+        member: { include: { user: true } }
       }
     });
+
+    if (workout.trainer?.user && workout.member?.user) {
+      await logAudit('WORKOUT_ASSIGNED', workout.trainer.user.id, 'trainer', `Trainer ${workout.trainer.user.name || workout.trainer.user.username} assigned workout ${workout.title} to Member ${workout.member.user.name || workout.member.user.username}`);
+    }
+
     res.json(workout);
   } catch (error) {
     console.error(error);
