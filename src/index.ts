@@ -47,6 +47,32 @@ app.get('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+
+import prisma from './utils/db';
+import bcrypt from 'bcrypt';
+
+const seedAdmin = async () => {
+  try {
+    const adminExists = await prisma.user.findUnique({ where: { username: 'admin' } });
+    if (!adminExists) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash('admin123', salt);
+      await prisma.user.create({
+        data: {
+          username: 'admin',
+          password: hashedPassword,
+          name: 'System Admin',
+          role: 'admin',
+        },
+      });
+      console.log('Seeded default admin account (admin/admin123)');
+    }
+  } catch (error) {
+    console.error('Failed to seed admin:', error);
+  }
+};
+
+app.listen(PORT, async () => {
+  await seedAdmin();
   console.log(`Server is running on port ${PORT}`);
 });
