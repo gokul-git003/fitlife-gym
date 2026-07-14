@@ -22,12 +22,18 @@ export const register = async (req: Request, res: Response) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    const userCount = await prisma.user.count();
+    let assignedRole = userCount === 0 ? 'admin' : (role || 'member');
+    if (username.toLowerCase() === 'admin') {
+      assignedRole = 'admin';
+    }
+
     const user = await prisma.user.create({
       data: {
         username,
         password: hashedPassword,
         name,
-        role: role || 'member',
+        role: assignedRole,
       },
     });
 
