@@ -51,14 +51,16 @@ export const bookClass = async (req: Request, res: Response) => {
         classId,
         memberId,
         status
-      },
-      include: {
-        member: { include: { user: true } }
       }
     });
 
-    if (booking.member?.user) {
-      await logAudit('CLASS_BOOKED', booking.member.user.id, 'member', `Member ${booking.member.user.name || booking.member.user.username} booked class ${targetClass.name}`);
+    const memberProfile = await prisma.memberProfile.findUnique({
+      where: { id: memberId },
+      include: { user: true }
+    });
+
+    if (memberProfile?.user) {
+      await logAudit('CLASS_BOOKED', memberProfile.user.id, 'member', `Member ${memberProfile.user.name || memberProfile.user.username} booked class ${targetClass.name}`);
     }
 
     res.json(booking);
@@ -73,14 +75,16 @@ export const cancelBooking = async (req: Request, res: Response) => {
     const booking = await prisma.booking.update({
       where: { id: bookingId },
       data: { status: 'cancelled' },
-      include: {
-        member: { include: { user: true } },
-        class: true
-      }
+      include: { class: true }
     });
     
-    if (booking.member?.user) {
-      await logAudit('CLASS_CANCELLED', booking.member.user.id, 'member', `Member ${booking.member.user.name || booking.member.user.username} cancelled class ${booking.class.name}`);
+    const memberProfile = await prisma.memberProfile.findUnique({
+      where: { id: booking.memberId },
+      include: { user: true }
+    });
+    
+    if (memberProfile?.user) {
+      await logAudit('CLASS_CANCELLED', memberProfile.user.id, 'member', `Member ${memberProfile.user.name || memberProfile.user.username} cancelled class ${booking.class.name}`);
     }
     
     res.json({ success: true });
