@@ -15,7 +15,9 @@ export default function AdminCalendar() {
         if (data.length > 0) {
           const formatted = data.map((item: any) => ({
             id: item.id,
-            title: `${item.name} (${item.trainer?.name || 'Trainer'})`,
+            title: item.type === 'workout' 
+              ? `Workout: ${item.name} (${item.member?.name || 'Member'})`
+              : `Class: ${item.name} (${item.trainer?.name || 'Trainer'})`,
             start: parseISO(item.startTime),
             end: addMinutes(parseISO(item.startTime), 60), // Assuming 60 mins duration
           }));

@@ -117,8 +117,29 @@ export const getTrainerCalendar = async (req: Request, res: Response) => {
       where: { trainerId: trainerProfile.id },
       include: { bookings: true }
     });
+
+    const workouts = await prisma.workout.findMany({
+      where: { trainerId: trainerProfile.id },
+      include: { member: { include: { user: true } } }
+    });
+
+    const formattedClasses = classes.map(c => ({
+      ...c,
+      id: `class-${c.id}`,
+      type: 'class',
+      startTime: c.startTime
+    }));
+
+    const formattedWorkouts = workouts.map(w => ({
+      id: `workout-${w.id}`,
+      name: w.title,
+      type: 'workout',
+      startTime: w.date,
+      capacity: 1, // pseudo capacity for display
+      member: { name: w.member?.user?.name }
+    }));
     
-    res.json(classes);
+    res.json([...formattedClasses, ...formattedWorkouts]);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to fetch calendar classes' });

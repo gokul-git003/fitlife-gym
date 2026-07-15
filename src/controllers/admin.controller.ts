@@ -285,13 +285,31 @@ export const getCalendarClasses = async (req: Request, res: Response) => {
     const classes = await prisma.class.findMany({
       include: { trainer: { include: { user: true } } }
     });
-    const formatted = classes.map(c => ({
-      id: c.id,
+    const workouts = await prisma.workout.findMany({
+      include: { 
+        trainer: { include: { user: true } },
+        member: { include: { user: true } }
+      }
+    });
+
+    const formattedClasses = classes.map(c => ({
+      id: `class-${c.id}`,
+      type: 'class',
       name: c.name,
       startTime: c.startTime,
       trainer: { name: c.trainer?.user?.name }
     }));
-    res.json(formatted);
+
+    const formattedWorkouts = workouts.map(w => ({
+      id: `workout-${w.id}`,
+      type: 'workout',
+      name: w.title,
+      startTime: w.date,
+      trainer: { name: w.trainer?.user?.name },
+      member: { name: w.member?.user?.name }
+    }));
+
+    res.json([...formattedClasses, ...formattedWorkouts]);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }

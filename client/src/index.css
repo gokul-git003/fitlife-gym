@@ -22,6 +22,11 @@
     color: var(--color-textMain);
     -webkit-font-smoothing: antialiased;
   }
+
+  option {
+    background-color: var(--color-surface);
+    color: var(--color-textMain);
+  }
 }
 
 @layer utilities {

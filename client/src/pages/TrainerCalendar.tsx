@@ -17,7 +17,9 @@ export default function TrainerCalendar() {
         if (data.length > 0) {
           const formatted = data.map((item: any) => ({
             id: item.id,
-            title: `${item.name} (${item.capacity} capacity)`,
+            title: item.type === 'workout' 
+              ? `Workout: ${item.name} (${item.member?.name || 'Member'})`
+              : `Class: ${item.name} (${item.capacity} capacity)`,
             start: parseISO(item.startTime),
             end: addMinutes(parseISO(item.startTime), 60), // Assuming 60 mins duration
           }));
